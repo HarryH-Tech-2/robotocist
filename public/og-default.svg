@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" fill="none">
+  <rect width="1200" height="630" fill="#111118"/>
+  <text x="600" y="280" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="64" font-weight="800">
+    <tspan fill="#fafafa">Robo</tspan><tspan fill="#3385ff">tocist</tspan>
+  </text>
+  <text x="600" y="340" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="24" fill="#a1a1aa">
+    AI &amp; Robotics News, Articles, and Tutorials
+  </text>
+</svg>
