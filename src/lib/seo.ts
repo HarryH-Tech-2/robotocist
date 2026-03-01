@@ -16,7 +16,7 @@ export function buildJsonLd(): JsonLdEntry[] {
     name: siteConfig.name,
     url: siteConfig.url,
     logo: `${siteConfig.url}/logo.png`,
-    sameAs: [siteConfig.links.twitter, siteConfig.links.github],
+    sameAs: [`${siteConfig.url}/feed.xml`],
   };
 
   const webSite: WithContext<WebSite> = {

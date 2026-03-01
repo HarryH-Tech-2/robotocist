@@ -3,9 +3,9 @@ import { Container } from "@/components/ui/container";
 import { NewsletterForm } from "@/components/newsletter/newsletter-form";
 
 export const metadata: Metadata = {
-  title: "Newsletter",
+  title: "Subscribe to the AI & Robotics Newsletter — Robotocist Weekly",
   description:
-    "Subscribe to the Robotocist newsletter for weekly AI and robotics updates delivered to your inbox.",
+    "Get weekly AI and robotics insights delivered to your inbox. Curated news, tutorial alerts, and exclusive analysis from the Robotocist team. Free, no spam.",
 };
 
 export default function NewsletterPage() {

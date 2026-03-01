@@ -1,0 +1,179 @@
+---
+title: "Edge AI for Robotics: The Hardware Powering On-Device Intelligence"
+description: "A comprehensive guide to edge AI hardware for robotics — from NVIDIA Jetson and Google Coral to custom ASICs. How to choose the right compute platform for your robot's AI workload."
+date: "2026-01-20"
+tags: ["edge-ai", "hardware", "nvidia-jetson", "embedded-systems", "inference"]
+author: "Robotocist Team"
+image: "/images/nvidia-isaac.png"
+category: "ai"
+featured: false
+---
+
+Cloud AI is powerful, but robots can't afford 100ms of network latency when making real-time decisions. Edge AI — running neural networks directly on the robot — is essential for responsive, reliable, and private robotic systems.
+
+## Why Edge AI Matters for Robots
+
+Every millisecond counts in robotics:
+
+- **Safety** — a robot arm moving at 1 m/s travels 10cm in 100ms of cloud latency
+- **Reliability** — robots must function without internet connectivity
+- **Privacy** — factory and medical robots handle sensitive data
+- **Bandwidth** — streaming multiple camera feeds to the cloud is expensive
+- **Cost** — cloud inference bills add up for always-on systems
+
+## The Hardware Landscape
+
+### NVIDIA Jetson Family
+
+The dominant platform for robotics AI, offering the best performance-per-watt for neural network inference:
+
+| Model | GPU Cores | AI Performance | Power | Price | Best For |
+|-------|-----------|---------------|-------|-------|----------|
+| Orin Nano | 1024 CUDA | 40 TOPS | 7-15W | $199 | Hobby/education |
+| Orin NX | 1024 CUDA | 70-100 TOPS | 10-25W | $399-$599 | Commercial robots |
+| AGX Orin | 2048 CUDA | 200-275 TOPS | 15-60W | $999-$1999 | Advanced autonomy |
+| Thor (2026) | Next-gen | 800 TOPS | TBD | TBD | Humanoid robots |
+
+The Jetson ecosystem includes:
+
+- **JetPack SDK** — CUDA, TensorRT, cuDNN pre-installed
+- **Isaac ROS** — GPU-accelerated ROS 2 packages
+- **DeepStream** — multi-camera video analytics pipeline
+- **Triton Inference Server** — production model serving
+
+### Qualcomm Robotics RB Series
+
+Strong competitor for mobile and drone applications:
+
+- **RB5** — 15 TOPS, excellent power efficiency, 5G connectivity built-in
+- **RB3 Gen 2** — budget-friendly for simpler applications
+- Best for: drones, mobile robots, consumer devices
+
+### Google Coral
+
+Purpose-built for TensorFlow Lite models:
+
+- **Edge TPU** — 4 TOPS at only 2W
+- Great for: simple classification, detection on power-constrained robots
+- Limitation: only supports quantized TF Lite models
+
+### Intel Movidius / OpenVINO
+
+Optimized for Intel-based systems:
+
+- **Myriad X VPU** — 4 TOPS, USB stick form factor
+- **OpenVINO toolkit** — excellent model optimization
+- Best for: integration with x86 systems, Intel RealSense cameras
+
+### Custom Silicon
+
+Major robotics companies are designing their own chips:
+
+- **Tesla D2** — powers Optimus humanoid and FSD computer
+- **Apple Neural Engine** — in Apple Vision Pro and future robotics
+- **Google TPU** — powers Waymo's self-driving cars
+
+## Choosing the Right Platform
+
+```
+Decision flowchart:
+
+Power budget < 5W?
+  → Google Coral or Qualcomm RB3 Gen 2
+
+Need multi-camera + LiDAR processing?
+  → NVIDIA Jetson AGX Orin
+
+Drone or weight-constrained?
+  → Qualcomm RB5 or Jetson Orin Nano
+
+Running large transformer models?
+  → Jetson AGX Orin (minimum)
+
+Budget under $200?
+  → Jetson Orin Nano or Coral Dev Board
+```
+
+## Model Optimization for Edge
+
+Running AI models on edge hardware requires optimization. Raw models from training are typically 10-100x too large and slow for real-time inference.
+
+### Quantization
+
+Reduce numerical precision from FP32 to INT8 or INT4:
+
+```python
+import tensorrt as trt
+
+def optimize_model(onnx_path, output_path):
+    """Convert ONNX model to TensorRT with INT8 quantization."""
+    logger = trt.Logger(trt.Logger.WARNING)
+    builder = trt.Builder(logger)
+    network = builder.create_network(
+        1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+    )
+    parser = trt.OnnxParser(network, logger)
+
+    with open(onnx_path, "rb") as f:
+        parser.parse(f.read())
+
+    config = builder.create_builder_config()
+    config.set_flag(trt.BuilderFlag.INT8)
+    config.set_flag(trt.BuilderFlag.FP16)  # fallback
+
+    engine = builder.build_serialized_network(network, config)
+    with open(output_path, "wb") as f:
+        f.write(engine)
+```
+
+Typical speedups from quantization:
+
+| Precision | Speed vs FP32 | Accuracy Loss | Memory Reduction |
+|-----------|--------------|---------------|------------------|
+| FP16 | 2x | < 0.1% | 2x |
+| INT8 | 4x | 0.5-2% | 4x |
+| INT4 | 8x | 2-5% | 8x |
+
+### Pruning
+
+Remove unnecessary weights from the network — like trimming dead branches from a tree. Structured pruning can remove entire channels, making the pruned model genuinely faster (not just smaller).
+
+### Knowledge Distillation
+
+Train a small "student" model to mimic a large "teacher" model. The student is fast enough for edge deployment while retaining most of the teacher's accuracy.
+
+### Architecture Search
+
+Use Neural Architecture Search (NAS) to find the optimal model architecture for a specific hardware target. NVIDIA's NAS tools can find models that are 2-5x faster than manually designed architectures at the same accuracy.
+
+## Real-World Performance
+
+What can you actually run on robotics edge hardware?
+
+### Jetson Orin Nano (15W)
+
+- **YOLOv8s** object detection: 60 FPS at 640x640
+- **MobileSAM** segmentation: 25 FPS
+- **Depth Anything** monocular depth: 30 FPS
+- **Whisper-tiny** speech recognition: real-time
+
+### Jetson AGX Orin (60W)
+
+- **YOLOv8l** object detection: 90 FPS at 640x640
+- **SAM 2** video segmentation: 30 FPS
+- **RT-1** robot policy: 5 Hz (enough for manipulation)
+- **LLaMA-7B** language model: 15 tokens/sec (INT4)
+- **3D Gaussian Splatting** rendering: 30 FPS
+
+## Best Practices
+
+1. **Profile first** — use NVIDIA Nsight or similar tools before optimizing
+2. **Batch operations** — process multiple camera frames simultaneously
+3. **Use TensorRT** — it consistently delivers 2-5x speedup over PyTorch
+4. **Async inference** — overlap computation with I/O and sensor reading
+5. **Thermal management** — sustained performance requires adequate cooling
+6. **Power budgeting** — reserve headroom for motor controllers and sensors
+
+## Conclusion
+
+Edge AI hardware is evolving rapidly, with each generation delivering roughly 2x the performance at the same power. For roboticists, the choice of edge platform directly determines what your robot can perceive, understand, and do in real-time. Choose wisely, optimize aggressively, and stay current — the hardware landscape changes every year.

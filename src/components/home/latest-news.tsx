@@ -36,15 +36,24 @@ export function LatestNews({ items }: { items: NewsItem[] }) {
           </Link>
         </div>
         <div className="mt-8 space-y-4">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <Link
               key={item.slugAsParams}
               href={`/news/${item.slugAsParams}`}
-              className="group flex items-start gap-4 rounded-lg border border-stone-200 bg-white p-5 transition-all hover:shadow-md hover:border-primary/30"
+              className="group flex items-start gap-4 rounded-xl border border-stone-200 bg-white p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 hover:-translate-y-0.5"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-900 text-sm font-bold text-primary">
+                {String(index + 1).padStart(2, "0")}
+              </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  {item.breaking && <Badge variant="advanced">Breaking</Badge>}
+                  {item.breaking && (
+                    <Badge variant="advanced">
+                      <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                      Breaking
+                    </Badge>
+                  )}
                   {item.source && (
                     <span className="text-xs text-text-muted">
                       {item.source}

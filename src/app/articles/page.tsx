@@ -7,9 +7,9 @@ import { getAllArticles } from "@/lib/content";
 import { ArticleListingClient } from "./listing-client";
 
 export const metadata: Metadata = {
-  title: "Articles",
+  title: "AI & Robotics Articles — Expert Analysis, Research & Industry Insights",
   description:
-    "In-depth articles on AI, robotics, machine learning, and automation.",
+    "In-depth articles on artificial intelligence, robotics, machine learning, and industrial automation. Expert analysis, research breakdowns, and industry perspectives from leading engineers.",
 };
 
 const categories = [
@@ -51,6 +51,7 @@ export default function ArticlesPage() {
                 tags: a.tags,
                 category: a.category,
                 featured: a.featured,
+                image: a.image,
               }))}
               categories={categories}
             />

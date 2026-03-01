@@ -22,6 +22,7 @@ interface Tutorial {
   difficulty: Difficulty;
   estimatedTime?: string;
   techStack: string[];
+  image?: string;
 }
 
 export function TutorialListingClient({
@@ -59,6 +60,7 @@ export function TutorialListingClient({
               badge={tutorial.difficulty}
               badgeVariant={tutorial.difficulty}
               meta={tutorial.estimatedTime}
+              image={tutorial.image}
             />
           ))}
         </div>

@@ -5,9 +5,9 @@ import { ArticleCard } from "@/components/content/article-card";
 import { getAllNews } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "News",
+  title: "AI & Robotics News — Breaking Stories, Launches & Industry Updates",
   description:
-    "Breaking news and updates from the world of AI and robotics.",
+    "Stay updated with breaking AI and robotics news. Coverage of product launches, research breakthroughs, partnerships, and industry developments from top companies and labs.",
 };
 
 export default function NewsPage() {
@@ -47,6 +47,7 @@ export default function NewsPage() {
                     badge={item.breaking ? "Breaking" : undefined}
                     badgeVariant={item.breaking ? "advanced" : "primary"}
                     meta={item.source}
+                    image={item.image}
                   />
                 ))}
               </div>

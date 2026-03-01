@@ -72,6 +72,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         readingTime={post.readingTime}
         contentType="articles"
         category={post.category}
+        image={post.image}
       />
       <section className="bg-reading py-12">
         <Container className="max-w-4xl">

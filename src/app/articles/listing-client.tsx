@@ -14,6 +14,7 @@ interface Article {
   tags: string[];
   category: string;
   featured: boolean;
+  image?: string;
 }
 
 interface ArticleListingClientProps {
@@ -54,6 +55,7 @@ export function ArticleListingClient({
               tags={article.tags}
               badge={article.category}
               badgeVariant="primary"
+              image={article.image}
             />
           ))}
         </div>

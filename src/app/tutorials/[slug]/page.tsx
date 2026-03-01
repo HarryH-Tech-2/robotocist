@@ -81,6 +81,7 @@ export default async function TutorialDetailPage({ params }: PageProps) {
         contentType="tutorials"
         difficulty={post.difficulty}
         estimatedTime={post.estimatedTime}
+        image={post.image}
       />
       <section className="bg-reading py-12">
         <Container>

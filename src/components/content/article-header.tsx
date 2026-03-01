@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { formatDate } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface ArticleHeaderProps {
   category?: string;
   difficulty?: Difficulty;
   estimatedTime?: string;
+  image?: string;
 }
 
 const typeLabels: Record<ContentType, string> = {
@@ -29,10 +31,23 @@ export function ArticleHeader({
   category,
   difficulty,
   estimatedTime,
+  image,
 }: ArticleHeaderProps) {
   return (
-    <section className="bg-surface-900 pb-16 pt-12">
-      <Container className="max-w-4xl">
+    <section className="relative overflow-hidden bg-surface-900 pb-16 pt-12">
+      {image && (
+        <div className="absolute inset-0">
+          <Image
+            src={image}
+            alt=""
+            fill
+            className="object-cover opacity-15 blur-sm"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-900/80 via-surface-900/90 to-surface-900" />
+        </div>
+      )}
+      <Container className="relative max-w-4xl">
         <div className="flex items-center gap-3">
           <Badge variant="accent">{typeLabels[contentType]}</Badge>
           {category && <Badge variant="primary">{category}</Badge>}

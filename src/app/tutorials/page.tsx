@@ -5,9 +5,9 @@ import { getAllTutorials } from "@/lib/content";
 import { TutorialListingClient } from "./listing-client";
 
 export const metadata: Metadata = {
-  title: "Tutorials",
+  title: "Robotics & AI Tutorials — Hands-On Guides for Engineers & Developers",
   description:
-    "Hands-on tutorials for robotics, AI, and automation — from beginner to advanced.",
+    "Step-by-step robotics and AI tutorials with working code. Learn ROS 2, OpenCV, PyTorch, YOLO, robot kinematics, and more — from beginner to advanced.",
 };
 
 export default function TutorialsPage() {
@@ -41,6 +41,7 @@ export default function TutorialsPage() {
                 difficulty: t.difficulty,
                 estimatedTime: t.estimatedTime,
                 techStack: t.techStack,
+                image: t.image,
               }))}
             />
           </Suspense>

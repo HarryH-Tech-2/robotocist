@@ -1,0 +1,364 @@
+---
+title: "Building a Computer Vision Pipeline with OpenCV and Python"
+description: "Learn to build a complete computer vision pipeline from scratch using OpenCV and Python. Covers image processing, feature detection, object tracking, and deploying your pipeline for real-time video analysis."
+date: "2026-02-16"
+tags: ["opencv", "computer-vision", "python", "tutorial", "image-processing"]
+author: "Robotocist Team"
+image: "/images/opencv-tutorial.png"
+difficulty: "intermediate"
+prerequisites: ["Python 3.10+", "Basic understanding of NumPy", "Familiarity with image concepts (pixels, channels)"]
+techStack: ["Python 3.12", "OpenCV 4.10", "NumPy", "Matplotlib"]
+estimatedTime: "60 minutes"
+---
+
+Computer vision is a fundamental skill for any robotics engineer. In this tutorial, you'll build a complete vision pipeline that can process images, detect features, and track objects in real-time video.
+
+## What You'll Build
+
+By the end of this tutorial, you'll have a working pipeline that:
+
+- Loads and preprocesses images
+- Detects edges and contours
+- Finds and matches features between images
+- Tracks colored objects in real-time video
+- Runs at 30+ FPS on standard hardware
+
+## Prerequisites
+
+Make sure you have:
+
+- **Python 3.10+** installed
+- **pip** package manager
+- A **webcam** (for the real-time section)
+- Basic familiarity with NumPy arrays
+
+## Step 1: Set Up Your Environment
+
+```bash
+# Create a virtual environment
+python -m venv cv_pipeline
+source cv_pipeline/bin/activate  # Linux/Mac
+# cv_pipeline\Scripts\activate   # Windows
+
+# Install dependencies
+pip install opencv-python numpy matplotlib
+```
+
+Verify the installation:
+
+```python
+import cv2
+print(f"OpenCV version: {cv2.__version__}")
+```
+
+## Step 2: Image Loading and Basic Operations
+
+```python
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load an image
+image = cv2.imread("robot.jpg")
+# OpenCV uses BGR by default, convert to RGB for display
+image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+# Basic properties
+print(f"Shape: {image.shape}")       # (height, width, channels)
+print(f"Data type: {image.dtype}")   # uint8 (0-255)
+
+# Resize while maintaining aspect ratio
+def resize_with_aspect(image, width=None, height=None):
+    h, w = image.shape[:2]
+    if width is None and height is None:
+        return image
+    if width is None:
+        ratio = height / h
+        dim = (int(w * ratio), height)
+    else:
+        ratio = width / w
+        dim = (width, int(h * ratio))
+    return cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+
+resized = resize_with_aspect(image, width=640)
+```
+
+## Step 3: Image Preprocessing Pipeline
+
+A good preprocessing pipeline is essential for reliable computer vision:
+
+```python
+class ImagePreprocessor:
+    """Reusable image preprocessing pipeline."""
+
+    def __init__(self, target_size=(640, 480)):
+        self.target_size = target_size
+
+    def preprocess(self, image):
+        """Apply full preprocessing pipeline."""
+        # Resize
+        processed = cv2.resize(image, self.target_size)
+
+        # Denoise using Non-Local Means
+        processed = cv2.fastNlMeansDenoisingColored(
+            processed, None, 10, 10, 7, 21
+        )
+
+        # Enhance contrast using CLAHE
+        lab = cv2.cvtColor(processed, cv2.COLOR_BGR2LAB)
+        l_channel, a, b = cv2.split(lab)
+
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l_enhanced = clahe.apply(l_channel)
+
+        enhanced = cv2.merge([l_enhanced, a, b])
+        result = cv2.cvtColor(enhanced, cv2.COLOR_LAB2BGR)
+
+        return result
+
+    def to_grayscale(self, image):
+        """Convert to grayscale with preprocessing."""
+        processed = self.preprocess(image)
+        return cv2.cvtColor(processed, cv2.COLOR_BGR2GRAY)
+```
+
+## Step 4: Edge Detection and Contours
+
+Edge detection is the foundation of many computer vision tasks:
+
+```python
+def detect_edges_and_contours(image):
+    """Detect edges using Canny and find contours."""
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Canny edge detection
+    edges = cv2.Canny(blurred, threshold1=50, threshold2=150)
+
+    # Find contours
+    contours, hierarchy = cv2.findContours(
+        edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    # Filter by area (remove noise)
+    min_area = 500
+    significant_contours = [
+        c for c in contours if cv2.contourArea(c) > min_area
+    ]
+
+    # Draw contours on original image
+    result = image.copy()
+    cv2.drawContours(result, significant_contours, -1, (0, 255, 0), 2)
+
+    # Annotate each contour
+    for contour in significant_contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        area = cv2.contourArea(contour)
+        cv2.rectangle(result, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        cv2.putText(
+            result, f"Area: {area:.0f}",
+            (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1
+        )
+
+    return result, edges, significant_contours
+```
+
+## Step 5: Feature Detection and Matching
+
+Feature matching allows you to find correspondences between images:
+
+```python
+def match_features(image1, image2):
+    """Detect and match ORB features between two images."""
+    gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+    # Create ORB detector (free alternative to SIFT/SURF)
+    orb = cv2.ORB_create(nfeatures=1000)
+
+    # Detect keypoints and compute descriptors
+    kp1, des1 = orb.detectAndCompute(gray1, None)
+    kp2, des2 = orb.detectAndCompute(gray2, None)
+
+    # Match using brute-force with Hamming distance
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
+
+    # Sort by distance (best matches first)
+    matches = sorted(matches, key=lambda x: x.distance)
+
+    # Draw top 50 matches
+    result = cv2.drawMatches(
+        image1, kp1, image2, kp2,
+        matches[:50], None,
+        flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
+    )
+
+    print(f"Found {len(matches)} matches")
+    return result, matches, kp1, kp2
+```
+
+## Step 6: Real-Time Color Object Tracking
+
+Now let's build a real-time tracker using your webcam:
+
+```python
+class ColorTracker:
+    """Track objects by color in real-time video."""
+
+    def __init__(self, lower_hsv, upper_hsv, min_area=1000):
+        self.lower = np.array(lower_hsv)
+        self.upper = np.array(upper_hsv)
+        self.min_area = min_area
+        self.trail = []
+
+    def track(self, frame):
+        """Process a single frame and return tracking results."""
+        # Convert to HSV color space
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        # Create mask for target color
+        mask = cv2.inRange(hsv, self.lower, self.upper)
+
+        # Clean up mask with morphological operations
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+        mask = cv2.erode(mask, kernel, iterations=2)
+        mask = cv2.dilate(mask, kernel, iterations=2)
+
+        # Find contours in mask
+        contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        result = frame.copy()
+
+        if contours:
+            # Find largest contour
+            largest = max(contours, key=cv2.contourArea)
+            area = cv2.contourArea(largest)
+
+            if area > self.min_area:
+                # Get bounding circle
+                ((x, y), radius) = cv2.minEnclosingCircle(largest)
+                center = (int(x), int(y))
+
+                # Draw tracking visualization
+                cv2.circle(result, center, int(radius), (0, 255, 0), 2)
+                cv2.circle(result, center, 5, (0, 0, 255), -1)
+
+                # Update trail
+                self.trail.append(center)
+                if len(self.trail) > 50:
+                    self.trail.pop(0)
+
+                # Draw trail
+                for i in range(1, len(self.trail)):
+                    thickness = int(np.sqrt(50 / float(i + 1)) * 2.5)
+                    cv2.line(
+                        result, self.trail[i - 1], self.trail[i],
+                        (0, 165, 255), thickness
+                    )
+
+        return result, mask
+
+
+def run_tracking():
+    """Main tracking loop."""
+    cap = cv2.VideoCapture(0)
+
+    # Track blue objects (adjust HSV range for your object)
+    tracker = ColorTracker(
+        lower_hsv=[100, 100, 100],
+        upper_hsv=[130, 255, 255]
+    )
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        result, mask = tracker.track(frame)
+
+        cv2.imshow("Tracking", result)
+        cv2.imshow("Mask", mask)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+```
+
+## Step 7: Putting It All Together
+
+Let's create a complete pipeline class that combines everything:
+
+```python
+class VisionPipeline:
+    """Complete computer vision pipeline for robotics applications."""
+
+    def __init__(self):
+        self.preprocessor = ImagePreprocessor(target_size=(640, 480))
+        self.orb = cv2.ORB_create(nfeatures=500)
+        self.trackers = {}
+
+    def add_color_tracker(self, name, lower_hsv, upper_hsv):
+        """Add a named color tracker to the pipeline."""
+        self.trackers[name] = ColorTracker(lower_hsv, upper_hsv)
+
+    def process_frame(self, frame):
+        """Run the complete pipeline on a single frame."""
+        results = {"frame": frame, "detections": []}
+
+        # Preprocess
+        processed = self.preprocessor.preprocess(frame)
+
+        # Edge detection
+        gray = cv2.cvtColor(processed, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 50, 150)
+
+        # Run all color trackers
+        for name, tracker in self.trackers.items():
+            tracked, mask = tracker.track(processed)
+            results["detections"].append({
+                "tracker": name,
+                "frame": tracked,
+                "mask": mask
+            })
+
+        results["edges"] = edges
+        results["processed"] = processed
+        return results
+
+
+# Usage
+pipeline = VisionPipeline()
+pipeline.add_color_tracker("red", [0, 100, 100], [10, 255, 255])
+pipeline.add_color_tracker("blue", [100, 100, 100], [130, 255, 255])
+
+cap = cv2.VideoCapture(0)
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    results = pipeline.process_frame(frame)
+    cv2.imshow("Pipeline Output", results["processed"])
+
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+cap.release()
+```
+
+## Next Steps
+
+Now that you have a working computer vision pipeline, explore:
+
+- **Deep learning integration** — use YOLO or SSD for object detection
+- **Stereo vision** — compute depth from two cameras
+- **ArUco markers** — precise pose estimation for robotics
+- **ROS 2 integration** — publish vision results as ROS topics
+- **GPU acceleration** — use OpenCV's CUDA module for faster processing
+
+Computer vision is a vast field, and this pipeline gives you a solid foundation to build on. In our next tutorial, we'll integrate this pipeline with ROS 2 to create a complete robot perception system.

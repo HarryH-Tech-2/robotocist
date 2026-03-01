@@ -24,29 +24,44 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} — ${siteConfig.description}`,
+    default: "Robotocist — AI & Robotics News, Expert Articles & Hands-On Tutorials",
     template: `%s | ${siteConfig.name}`,
   },
-  description: siteConfig.description,
+  description:
+    "The leading AI and robotics publication. Breaking news, expert analysis, and hands-on tutorials covering artificial intelligence, humanoid robots, machine learning, computer vision, and industrial automation.",
+  keywords: [
+    "AI",
+    "artificial intelligence",
+    "robotics",
+    "machine learning",
+    "humanoid robots",
+    "computer vision",
+    "ROS 2",
+    "automation",
+    "deep learning",
+    "reinforcement learning",
+    "tutorials",
+    "robotics news",
+  ],
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteConfig.url,
     siteName: siteConfig.name,
-    title: siteConfig.name,
+    title: "Robotocist — AI & Robotics News, Articles & Tutorials",
     description: siteConfig.description,
     images: [
       {
         url: "/og-default.png",
         width: 1200,
         height: 630,
-        alt: siteConfig.name,
+        alt: "Robotocist — AI & Robotics Publication",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.name,
+    title: "Robotocist — AI & Robotics Publication",
     description: siteConfig.description,
     images: ["/og-default.png"],
   },
@@ -63,6 +78,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.svg",
+  },
+  alternates: {
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
   },
 };
 
