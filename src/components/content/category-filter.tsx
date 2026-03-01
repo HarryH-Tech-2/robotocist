@@ -32,10 +32,10 @@ export function CategoryFilter({
       <button
         onClick={() => handleClick("")}
         className={cn(
-          "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+          "rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
           !active
-            ? "bg-primary text-white"
-            : "bg-stone-100 text-text-dark-secondary hover:bg-stone-200"
+            ? "border-primary bg-primary text-white shadow-md shadow-primary/25"
+            : "border-stone-300 bg-white text-text-dark-secondary hover:border-primary/50 hover:text-primary"
         )}
       >
         All
@@ -45,10 +45,10 @@ export function CategoryFilter({
           key={cat.value}
           onClick={() => handleClick(cat.value)}
           className={cn(
-            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            "rounded-full border px-4 py-2 text-sm font-medium transition-all duration-200",
             active === cat.value
-              ? "bg-primary text-white"
-              : "bg-stone-100 text-text-dark-secondary hover:bg-stone-200"
+              ? "border-primary bg-primary text-white shadow-md shadow-primary/25"
+              : "border-stone-300 bg-white text-text-dark-secondary hover:border-primary/50 hover:text-primary"
           )}
         >
           {cat.label}

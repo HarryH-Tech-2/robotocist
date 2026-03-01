@@ -1,0 +1,108 @@
+---
+title: "Interview: Building Robots for Mars with NASA JPL Engineer Dr. Sarah Chen"
+description: "NASA JPL robotics engineer Dr. Sarah Chen talks about Mars rover design, autonomous navigation on other planets, and the future of space robotics missions."
+date: "2026-02-25"
+tags: ["interview", "nasa", "space-robotics", "mars-rovers", "autonomous-navigation"]
+author: "Robotocist Team"
+image: "/images/ml-autonomous-navigation.png"
+category: "interview"
+featured: false
+---
+
+Dr. Sarah Chen has spent 14 years at NASA's Jet Propulsion Laboratory, where she served as deputy lead for the Perseverance rover's autonomous navigation system. She is now leading the mobility team for the Mars Sample Return mission's fetch rover. We discussed the unique engineering challenges of building robots that must work millions of miles from the nearest repair technician.
+
+---
+
+**Space robotics has a reputation for being extremely conservative with technology choices. Is that still true?**
+
+It is still true, and for good reason. When your robot is on Mars, there is no firmware update that fixes a hardware failure. There is no technician who can swap a broken motor. Everything must work the first time, in conditions you can simulate but never fully replicate on Earth.
+
+That said, we have gotten bolder over the years. Perseverance's AutoNav system was a significant leap. Previous rovers would drive a few meters, stop, take pictures, send them to Earth, wait for instructions, and then drive again. The round-trip communication delay to Mars is between 8 and 24 minutes, so that process was agonizingly slow. Spirit and Opportunity might cover 30 meters in a good sol — a Martian day.
+
+Perseverance can drive autonomously at speeds up to 120 meters per hour. It uses stereo cameras to build a 3D map of the terrain, identifies safe paths, and drives without waiting for Earth. On some sols, it has covered over 300 meters. That autonomy was critical because the Jezero Crater landing site is much more geologically complex than previous sites.
+
+**How does autonomous navigation work on Mars? It is not like you have GPS up there.**
+
+Correct, there is no GPS on Mars. The rover knows its position through a combination of visual odometry, wheel odometry, and sun tracking.
+
+Visual odometry is the primary method. The rover takes stereo images as it drives, matches features between consecutive frames, and calculates how much it has moved. This works well on rocky terrain where there are plenty of distinct features to track. On smooth sand dunes, it is harder because everything looks similar, so we fall back on wheel odometry with slip estimation.
+
+For absolute position, we use a technique called sun tracking combined with radio ranging from orbiters. The rover can determine its latitude from the sun's elevation and its longitude from the time. This is accurate to about 10 meters, which is sufficient for long-range navigation.
+
+The terrain assessment is where the real intelligence lives. The navigation cameras produce a 3D point cloud of the terrain ahead. Our software classifies each point as traversable or hazardous based on slope, roughness, step height, and rock density. Then a path planner finds the optimal route that balances safety, energy efficiency, and progress toward the goal.
+
+```python
+# Simplified version of the terrain assessment pipeline
+class MarsTerrainAssessor:
+    # Maximum safe slope for the rover in degrees
+    MAX_SLOPE = 25.0
+    # Maximum safe step height in meters
+    MAX_STEP = 0.30
+    # Maximum safe roughness (standard deviation of heights in meters)
+    MAX_ROUGHNESS = 0.08
+
+    def assess_cell(self, point_cloud_cell):
+        """Classify a terrain cell as traversable or hazardous."""
+        slope = self.compute_slope(point_cloud_cell)
+        step_height = self.compute_max_step(point_cloud_cell)
+        roughness = self.compute_roughness(point_cloud_cell)
+
+        is_safe = (
+            slope < self.MAX_SLOPE
+            and step_height < self.MAX_STEP
+            and roughness < self.MAX_ROUGHNESS
+        )
+        # Cost increases as terrain gets closer to limits
+        cost = (
+            0.4 * (slope / self.MAX_SLOPE)
+            + 0.3 * (step_height / self.MAX_STEP)
+            + 0.3 * (roughness / self.MAX_ROUGHNESS)
+        )
+        return TraversabilityResult(is_safe=is_safe, cost=cost)
+```
+
+**The Mars Sample Return mission involves a fetch rover. What makes that different from Perseverance?**
+
+The fetch rover has a completely different mission profile. Perseverance explores and collects samples, caching them in tubes that it drops on the surface. The fetch rover's job is to find those tubes, pick them up, and deliver them to the Mars Ascent Vehicle, which launches them into orbit for return to Earth.
+
+This means the fetch rover needs capabilities Perseverance does not have. First, it needs to locate small sample tubes on the surface — these are about the size of a marker pen — from a distance and drive to them precisely. Second, it needs a robotic arm that can pick up these tubes, which requires millimeter-level precision. Third, it needs to load the tubes into the ascent vehicle's sample container, which is a tight-tolerance mechanical operation.
+
+The autonomy requirements are also much higher. The fetch rover needs to operate for months collecting dozens of tubes across a wide area, and we want to minimize the ground-in-the-loop time. We are building in much more autonomous decision-making: the rover will plan its own collection routes, decide which tubes to pick up in what order based on distance and energy, and handle failures like a tube being partially buried in sand.
+
+**What are the radiation and environmental challenges you design around?**
+
+Mars has essentially no magnetic field and a very thin atmosphere, so the surface is bombarded with cosmic radiation and solar particle events. This plays havoc with electronics. We use radiation-hardened processors, which are generations behind commercial chips. Perseverance's main computer uses a RAD750 processor, which is roughly equivalent to a PowerPC G3 from 1997 in terms of raw performance.
+
+For the fetch rover, we are using the newer HPSC — High Performance Spaceflight Computing — chipset, which gives us about 10x the processing power. That is a big deal for autonomous navigation because we can run more sophisticated algorithms in real time.
+
+Temperature is the other major challenge. Mars surface temperatures range from minus 130 degrees Celsius at night to about 20 degrees during a warm afternoon. The electronics need to be kept within operating temperature, so we have heaters powered by a plutonium radioisotope thermoelectric generator. The RTG also provides continuous electrical power, which is why Perseverance can operate year-round, unlike the solar-powered Spirit and Opportunity that struggled during Martian winter.
+
+Dust is the silent killer. Martian dust is extremely fine, electrostatically charged, and gets into everything. It coats solar panels, clogs mechanisms, and abrases optical surfaces. We design sealed enclosures for sensitive components and use covers on cameras when they are not in active use.
+
+**How do you test a Mars rover on Earth?**
+
+We have a facility called the Mars Yard at JPL, which is an outdoor area filled with rocks and sand that simulates Martian terrain. We have a full engineering model of the rover that we drive around the Mars Yard to test navigation and mobility algorithms.
+
+For more controlled testing, we use a large indoor facility where we can control lighting to match Mars conditions. Mars has about 43% of Earth's surface gravity, so we have tilt tables and suspension rigs that partially offload the rover's weight to simulate lower gravity. It is not perfect, but it catches most issues.
+
+We also do extensive testing in simulation. We have high-fidelity physics simulators that model wheel-soil interaction, which is critical because Mars soil behaves very differently from Earth soil. It is finer, more cohesive, and can be deceptively weak. Spirit got permanently stuck in a soft sand trap in 2009, and that failure mode is always in the back of our minds.
+
+**What excites you most about the future of space robotics?**
+
+Two things. First, the commercial space industry is creating demand for robotics in orbit. Satellite servicing, debris removal, in-space manufacturing — these all need capable robotic systems. And because commercial missions can accept more risk than NASA flagship missions, there is more room to push the technology envelope.
+
+Second, I am excited about cooperative multi-robot missions. Instead of one big, expensive rover, imagine a fleet of smaller, cheaper robots that explore collaboratively. One robot gets stuck? The others continue the mission. One discovers something interesting? The others converge to investigate. We have been simulating multi-robot exploration at JPL and the efficiency gains are remarkable.
+
+The ultimate dream is building infrastructure on Mars with robots before humans arrive. Construction robots that can process Martian regolith into building materials, excavation robots that can dig habitats, and maintenance robots that keep everything running. If we are serious about sending humans to Mars in the 2040s, the robots need to arrive years earlier to prepare.
+
+**Any advice for engineers who want to work at JPL?**
+
+Study the fundamentals deeply. At JPL, you need to be excellent at your core discipline — controls, perception, planning, mechanical design — because there is no margin for error. But also cultivate breadth. The best engineers I work with can debug a motor controller in the morning and review a path planning algorithm in the afternoon.
+
+Get comfortable with testing and verification. In space robotics, we spend as much time testing as we do building. That might not sound exciting, but finding a subtle bug in the lab that would have caused a mission failure on Mars is one of the most rewarding experiences in engineering.
+
+And apply. Seriously. JPL hires hundreds of engineers every year, and we are always looking for people who are passionate about exploration. We have internship programs, postdoc positions, and early career tracks. The work is demanding, but when your robot sends back a sunset photo from Mars, there is nothing else like it.
+
+---
+
+*Dr. Chen's work on Mars rover autonomous navigation was recognized with NASA's Exceptional Engineering Achievement Medal. The Mars Sample Return mission is targeted for launch in the late 2020s.*

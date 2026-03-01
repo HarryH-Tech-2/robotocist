@@ -1,0 +1,106 @@
+---
+title: "Interview: Building the Next Generation of Humanoid Robots with Apex Robotics CEO Mira Vasquez"
+description: "We sit down with Apex Robotics CEO Mira Vasquez to discuss building humanoid robots, the challenges of hardware startups, and when robots will enter our homes."
+date: "2026-02-18"
+tags: ["interview", "humanoid-robots", "robotics-startup", "ceo", "hardware"]
+author: "Robotocist Team"
+image: "/images/humanoid-robots.png"
+category: "interview"
+featured: false
+---
+
+Apex Robotics has raised $340 million in two years and already has prototypes walking through pilot facilities. We spoke with founder and CEO Mira Vasquez about the enormous technical and business challenges of building humanoid robots from scratch.
+
+---
+
+**You left a VP of Engineering role at a major tech company to start a humanoid robotics company. What convinced you the timing was right?**
+
+Three things converged. First, actuator costs dropped by 70% between 2022 and 2024 thanks to the EV motor supply chain. We are using modified brushless DC motors that are manufactured at scale for electric vehicles, and that changes the economics completely. Second, foundation models gave us a path to general-purpose intelligence in a robot body. Before GPT-4 and its successors, you had to hand-code every behavior. Now we can leverage pre-trained models that understand language, spatial reasoning, and common sense. Third, and this is underappreciated, the simulation tools matured. NVIDIA Isaac Sim and MuJoCo let us train robot policies in simulation at a thousand times real-time speed. That was not possible five years ago.
+
+**Your Atlas-class humanoid stands at 5 feet 10 inches and weighs about 70 kilograms. Walk us through the key design decisions.**
+
+We spent six months just on the leg design. The human leg has an incredible range of motion and energy efficiency that is extremely hard to replicate. We went with a quasi-direct-drive approach for the hip and knee actuators, which gives us high bandwidth — the motors can react to ground changes in under 10 milliseconds. For the ankles, we use a series elastic actuator because compliance at the foot-ground interface is essential for stable walking on uneven terrain.
+
+The hands were the other major challenge. We have 16 degrees of freedom per hand, which is fewer than a human hand but enough for most manipulation tasks. Each finger has force sensors at the tip and in the palm, giving us the tactile feedback we need for delicate grasping.
+
+**How do you handle the battery problem? Humanoids are notoriously power-hungry.**
+
+We use a 2.5 kWh lithium iron phosphate battery pack in the torso. That gives us about four hours of mixed activity — walking, standing, light manipulation. Heavy tasks like carrying 20-kilogram loads will drain it faster, closer to two and a half hours. The key insight is that humanoid robots do not need to run marathons. In a warehouse or factory, there are charging stations nearby. We designed the robot to autonomously dock and charge in about 45 minutes.
+
+We also invested heavily in energy-efficient locomotion. Our walking gait was optimized in simulation over 100 billion steps to minimize energy consumption. The result is that our robot uses about 300 watts while walking at a normal pace, which is close to a human's metabolic expenditure for the same activity.
+
+**Tell us about your AI stack. How does the robot decide what to do?**
+
+We have a layered architecture. At the top is what we call the Cognitive Layer — this is a fine-tuned large language model that takes in task descriptions, visual context from the robot's cameras, and the robot's state, and produces a plan. The plan is a sequence of skills like "walk to shelf," "grasp object," "place on conveyor."
+
+Below that is the Skill Layer, where each skill is a neural network policy trained in simulation. The walking policy, the grasping policy, the manipulation policies — these are all separate networks that have been trained with reinforcement learning in Isaac Sim.
+
+At the bottom is the Control Layer, which runs at 1 kHz and handles the real-time motor commands, balance recovery, and safety checks. If the robot detects it is about to fall, the Control Layer overrides everything and executes a recovery maneuver.
+
+**What is the biggest technical challenge you have not solved yet?**
+
+Robust manipulation in unstructured environments. Walking is actually the more solved problem at this point. Boston Dynamics proved that dynamic locomotion is achievable. But ask a robot to fold laundry, load a dishwasher, or sort through a cluttered toolbox, and you quickly hit the limits of current AI. The combinatorial complexity of manipulating deformable objects, managing occlusions, and reasoning about physics in real time is staggering.
+
+We are making progress. Our latest policy can handle about 200 distinct manipulation primitives. But a human can handle millions. Closing that gap is a research problem that will take years.
+
+**How do you approach safety? A 70-kilogram robot walking around humans is inherently risky.**
+
+Safety is not a feature; it is the foundation. We have four layers of safety systems. First, mechanical compliance in the actuators so the robot cannot exert dangerous forces even if the software fails. Second, a dedicated safety processor that runs independently of the main compute stack, monitoring joint torques, velocities, and proximity sensors. Third, software-level safety constraints — virtual walls, speed limits near humans, and force caps during contact. Fourth, a behavioral safety layer where the AI is trained to be conservative, to slow down when uncertain, and to stop and ask for help rather than risk an accident.
+
+We are working with TUV to certify our robot under ISO 13482, which is the standard for personal care robots. It is a rigorous process, but necessary for building trust.
+
+**What is your go-to-market strategy? Who are the first customers?**
+
+We are starting with logistics and light manufacturing. These are environments where the tasks are somewhat structured, the economic value is clear, and the safety requirements, while strict, are manageable. Our first pilot is with a major third-party logistics provider, where our robots are unloading containers and sorting packages.
+
+The consumer market is the long-term vision, but we are realistic about the timeline. A robot in your home needs to handle an impossibly diverse set of situations. We think the technology will be ready for early consumer applications — think elderly assistance and household help — by 2030, but widespread adoption is probably 2033 to 2035.
+
+**The humanoid robot space is crowded. Tesla, Figure, 1X, Agility, Unitree — how do you differentiate?**
+
+Everyone focuses on the hardware, but the real differentiator is the AI. Our Cognitive Layer can learn new tasks from a five-minute demonstration. A warehouse manager can show our robot a new packing procedure and the robot generalizes it to different box sizes and product types. That learning efficiency is our moat.
+
+We also have an advantage in energy efficiency. Our walking gait consumes 40% less power than the closest competitor we have benchmarked against. In a logistics operation running 20 hours a day, that translates to fewer charging breaks and more productive time.
+
+**How big is your team, and what does your hiring look like?**
+
+We are at 280 people, roughly split into thirds: hardware engineering, AI and software, and operations — which includes manufacturing, supply chain, and business development. We are hiring aggressively in all three areas.
+
+The talent market for robotics is extremely competitive. Every major tech company is building a robotics division, and the pool of people who understand both mechanical systems and modern AI is small. We have had good luck hiring from adjacent fields. Some of our best AI engineers came from autonomous vehicles, and some of our best mechanical engineers came from medical devices and aerospace.
+
+One thing I will say is that culture matters enormously. Hardware startups are brutal. Things break, timelines slip, and you have to iterate in the physical world where every change takes days, not minutes. We hire for resilience and intellectual curiosity as much as for technical skill.
+
+**Humanoid robots often struggle with stairs, uneven surfaces, and unexpected obstacles. How does your robot handle real-world terrain?**
+
+Stairs were actually one of our first major milestones. Our robot can ascend and descend standard staircases at about 80% of human walking speed. We use a combination of depth cameras and IMU data to estimate each step's position and height, then adjust the foot placement in real time.
+
+Uneven surfaces like gravel, grass, or sloped ramps are handled through our impedance controller. Instead of commanding exact foot positions, we command a desired compliance — the foot acts like it is attached to a virtual spring and damper. When it contacts an uneven surface, it naturally adapts without needing perfect terrain mapping.
+
+Unexpected obstacles are the hardest case. If someone leaves a box in a corridor, the robot needs to detect it, decide whether to go around or step over it, and execute that plan without losing balance. We handle this through reactive planning — the navigation system replans at 10 Hz, so the robot is constantly updating its path based on what it sees right now.
+
+**What about the regulatory landscape? Is there clarity on how humanoid robots will be regulated?**
+
+Not yet, and that is a real concern. In the EU, the AI Act provides some framework, but it was not written with humanoid robots specifically in mind. In the US, OSHA governs workplace safety, but their standards were designed for traditional industrial robots, not mobile humanoids that share space with workers.
+
+We are actively working with standards bodies. We participate in the ISO TC 299 committee on robotics, and we have submitted proposals for new standards specific to humanoid robots in shared workspaces. The reality is that the technology is moving faster than the regulation, and we need the industry to self-regulate responsibly until the formal standards catch up.
+
+**What advice would you give to engineers who want to get into robotics?**
+
+Learn reinforcement learning and simulation. The days of purely hand-tuned PID controllers are ending. Modern robot behaviors are learned, not programmed. Get comfortable with Isaac Sim, MuJoCo, or PyBullet. Build simulated robots, train policies, and transfer them to hardware.
+
+Also, do not underestimate mechanical engineering. Software people often think hardware is solved, but the actuators, the structures, the thermal management — these are where the hardest unsolved problems live. The best roboticists I know are fluent in both software and hardware.
+
+**What has surprised you most about building a hardware startup?**
+
+The supply chain complexity. When you are a software company, your supply chain is basically cloud computing. When you are a hardware company, you have hundreds of suppliers across a dozen countries. A single delayed shipment of bearings from a factory in Shenzhen can halt your entire production line.
+
+We had a moment early on where our primary actuator supplier had a quality issue, and we lost three weeks of production. That taught us to dual-source every critical component. It is more expensive, but the resilience is worth it.
+
+The other surprise is how much mechanical iteration you need. In software, you can ship a fix in hours. In hardware, a design change to a structural component means new tooling, new molds, new testing — that is a four to six week cycle. You learn to be very thoughtful about design decisions upfront because the cost of changing them later is enormous.
+
+**Where will Apex Robotics be in five years?**
+
+We will have thousands of robots deployed in logistics facilities across North America and Europe. We will be generating revenue in the hundreds of millions. And we will have just launched our first consumer product — probably a home assistant robot that can do basic household tasks like tidying up, loading the dishwasher, and fetching items. That is the vision, and we are executing against it every day.
+
+---
+
+*Apex Robotics is headquartered in Austin, Texas. Their Series B round of $220 million was led by Sequoia Capital with participation from NVIDIA and Samsung Ventures.*
