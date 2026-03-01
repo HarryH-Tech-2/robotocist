@@ -22,8 +22,8 @@ export function Header() {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b border-primary/10 bg-surface-950/95 shadow-lg shadow-primary/5 backdrop-blur-xl"
-          : "border-b border-surface-700/50 bg-surface-900/95 backdrop-blur supports-[backdrop-filter]:bg-surface-900/80"
+          ? "border-b border-primary/20 bg-surface-950/95 shadow-lg shadow-primary/5 backdrop-blur-xl"
+          : "border-b border-transparent bg-surface-950"
       }`}
     >
       {/* Animated gradient line at top */}
